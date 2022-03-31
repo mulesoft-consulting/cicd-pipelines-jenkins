@@ -1,0 +1,126 @@
+#%RAML 1.0
+title: MindTickeExercise
+
+types:
+  Customer:
+    type: object
+    properties:
+      firstName:
+        required: true
+        type: string
+      lastName:
+        required: true
+        type: string
+      orderId:
+        required: true
+        type: string
+      address:
+        required: true
+        type: string        
+  Order:
+    type: object
+    properties:
+      poNumber:
+        required: true
+        type: integer
+      signatureRequiredFlag:
+        required: true
+        type: string
+      shipInstructions:
+        required: true
+        type: string
+      giftWrapFlag:
+        required: true
+        type: boolean
+      giftWrapMessage:
+        required: true
+        type: string
+      currencyCode:
+        required: true
+        type: string
+      subTotal:
+        required: true
+        type: number                           
+      email:
+        required: true
+        type: string                                   
+
+  Item:
+    type: object
+    properties:
+      id:
+        required: true
+        type: integer
+      category:
+        required: true
+        type: string
+      quantity:
+        required: true
+        type: number
+      orderId:
+        required: true
+        type: string                        
+
+
+/Order:
+  get:
+    responses:
+      201:
+        body:
+          application/json:
+            type: Customer    
+  post:
+    body: 
+      application/json:
+        type: Order
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              message: new order added    
+  delete:
+  put:
+  patch:
+
+/Customer:
+  get:
+    responses:
+      201:
+        body:
+          application/json:
+            type: Customer    
+  post:
+    body: 
+      application/json:
+        type: Customer
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              message: new customer added
+  delete:
+  put:
+  patch:
+
+/Item:
+  get:
+    responses:
+      201:
+        body:
+          application/json:
+            type: Item
+  post:
+    body: 
+      application/json:
+        type: Item
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              message: new order added    
+  delete:
+  put:
+  patch:
