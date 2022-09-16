@@ -1,8 +1,6 @@
-// Deploy Pipeline to CloudHub
-
-// Update line 56 with GIT's credentials ID from Jenkins
-// Update line 81 with Maven settings.xml file ID defined with the Jenkins Config File Provider Plugin
-// Update cient.id and client.secret values at line 91 & 92
+// Jenkinsfile test
+//@Library('shared-lib-mule') _
+//deployJob()
 
 def logSeparator = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
@@ -11,96 +9,42 @@ def log(String message)
     echo "++++++++++++++++++++++++++ [ ${message} ]"
 }
 
-def getEnvName(branchName) {
-    //echo "BRANCH NAME " + branchName
-    if("test" == branchName) {
-        return "-test-";
-    } else if ("master" == branchName) {
-        return "-";
-    } else {
-        return "-dev-";
-    }
-}
-
 pipeline {
     agent any
-    parameters {
-      string    name: 'applicationName',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'assetVersion',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'muleEnv',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'cloudHubEnv',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'rtmVersion',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'muleRegion',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'workerCount',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'workerType',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'muleBusinessGroup',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'gitUrl',    defaultValue: '',   trim: true, description: 'This field is required.'
-      string    name: 'gitBranchName',    defaultValue: '',   trim: true, description: 'This field is required.'
+    environment{
+        gitBranchName = "master" //"${env.BRANCH_NAME}"
+        gitUrl = 'git@github.com:username/test-pipeline-mule.git'       // changeit
     }
-
-    environment {
-        BUILD_VERSION = "build.${currentBuild.number}"
-        ANYPOINT_PLATFORM_CREDS = credentials('anypoint.platform.account')
-        ASSET_VERSION = "v1"
-        FQDN_ENV_NAME = getEnvName("${gitBranchName}")
-    }
-
-    stages {
-        stage('Setup Build'){
+    stages 
+    {
+        stage('Start') {
             steps {
-            	log("Checking out branch [${gitBranchName}] for [${applicationName}]")
-                
-                checkout([$class: 'GitSCM',
-                    branches: [[name: "*/${gitBranchName}" ]],
-                    userRemoteConfigs: [[
-                        url: "${gitUrl}",
-                        credentialsId: 'username'   // changeit
-                    ]]
-                ])
-
-                sh "ls -lart ./*"       // Optionnal
-                echo logSeparator
+                log("START")
             }
         }
-    
 
-        stage('Deploy CloudHub') { 
-          //environment {
-          //  ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-          //}
-          steps {
-
-            script {
-                log( "Starting Deployment to ${cloudhubEnv}" )
-                def pom = readMavenPom file: 'pom.xml'
-                log( "POM artifactId : ${pom.artifactId}" )
-                log( "POM version: ${pom.version}" )
-                withMaven(
-                    // Default Maven installation declared in the Jenkins "Global Tool Configuration"
-                    maven: 'Maven-3.8.4',
-                    // Maven settings.xml file defined with the Jenkins Config File Provider Plugin
-                    mavenSettingsConfig: '47d523ed-f17a-4fcc-a23a-1c73b60be27f') {
-                        sh """ mvn --batch-mode clean package mule:deploy -P cloudhub \
-                                -Dmule.env=${muleEnv} \
-                                -Dmule.runtime.version=${rtmVersion} \
-                                -Danypoint.connectedApp.clientId=$ANYPOINT_PLATFORM_CREDS_USR \
-                                -Danypoint.connectedApp.clientSecret=$ANYPOINT_PLATFORM_CREDS_PSW \
-                                -Dcloudhub.application.name=${pom.artifactId}${FQDN_ENV_NAME}$assetVersion \
-                                -Dcloudhub.environment=${cloudHubEnv} \
-                                -Danypoint.account.businessGroupId=${muleBusinessGroup} \
-                                -Dcloudhub.workers=${workerCount} \
-                                -Dcloudhub.worker.type=${workerType} \
-                                -Dcloudhub.region=${muleRegion} \
-                                -Danypoint.platform.client.id=2570fdb8edd747fdb0f2a6631b4ea8ce \
-                                -Danypoint.platform.client.secret=632729308B58471085DfD836d1E03112 """
-                }
-                log( "Deployment to ${cloudHubEnv} completed: ${currentBuild.currentResult}" )
-                echo logSeparator
+        stage ('Invoke Deploy Pipeline') {
+            steps {
+                build job: 'deployPipeline', parameters: [
+                    [$class: 'StringParameterValue', name: 'applicationName', value: 'test-pipeline-muleapp'],    // changeit
+                    [$class: 'StringParameterValue', name: 'assetVersion', value: 'v1'],                                // changeit
+                    [$class: 'StringParameterValue', name: 'muleEnv', value: 'DEV'],                                    // changeit
+                    [$class: 'StringParameterValue', name: 'cloudHubEnv', value: 'DEV'],                                // changeit
+                    [$class: 'StringParameterValue', name: 'rtmVersion', value: '4.4.0'],                               // changeit
+                    [$class: 'StringParameterValue', name: 'muleRegion', value: 'eu-west-1'],                           // changeit
+                    [$class: 'StringParameterValue', name: 'workerCount', value: '1'],                                  // changeit
+                    [$class: 'StringParameterValue', name: 'workerType', value: 'MICRO'],                               // changeit
+                    [$class: 'StringParameterValue', name: 'muleBusinessGroup', value: '76e8161c-646d-4c97-a4b3-953ff3a0b'], // changeit
+                    [$class: 'StringParameterValue', name: 'gitUrl', value: "${gitUrl}"],
+                    [$class: 'StringParameterValue', name: 'gitBranchName', value: "${gitBranchName}"]
+                ]
             }
+        }
 
-            
-          }
+        stage('End') {
+            steps{
+                log("END")
+            }
         }
     }
-
 }
